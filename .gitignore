@@ -1,0 +1,13 @@
+.*/
+keras-examples/
+temp*
+*.png
+__pycache__/
+*.npy
+activity/train-sklearn.py
+activity/train-sklearn-no_cv.py
+activity/train-grid.py
+*/results/*
+*/data/*
+*/models/*
+*/logs/*
