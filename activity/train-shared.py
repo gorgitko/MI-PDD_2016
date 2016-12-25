@@ -26,7 +26,7 @@ def batch_generator_multi(X_list, y, batch_size):
                    Xy[3])
 
 
-def build_model(input_shape, n_hidden, consume_less="cpu"):
+def build_model_shared(input_shape, n_hidden, consume_less="cpu"):
     """
     Build a shared GRU model: (GRU-GRU-GRU)-Dense
     Output from shared layer is summed.
@@ -54,7 +54,8 @@ def build_model(input_shape, n_hidden, consume_less="cpu"):
     encoded_3 = shared_gru(gru_3)
 
     merged_vector = merge([encoded_1, encoded_2, encoded_3], mode="sum", concat_axis=-1)
-    predictions = Dense(1, activation="sigmoid")(merged_vector)
+    gru = GRU(n_hidden, consume_less=consume_less)(merged_vector)
+    predictions = Dense(1, activation="sigmoid")(gru)
 
     model = Model(input=[gru_1, gru_2, gru_3], output=predictions)
     model.compile(loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"])
@@ -106,7 +107,7 @@ if __name__ == "__main__":
         early_stopping = EarlyStopping(monitor="val_loss", patience=3, verbose=5, mode="auto")
         model_checkpoint = ModelCheckpoint("{}results/{}-{}_hidden-best_weights_{{epoch:02d}}_{{val_loss:.5f}}.hdf5".format(root_dir, model_name, n_hidden),
                                            monitor="val_loss", verbose=5, save_best_only=True, mode="auto")
-        model = build_model(n_hidden, input_shape)
+        model = build_model_shared(n_hidden, input_shape)
         history = model.fit_generator(batch_generator_multi([X_1_train, X_2_train, X_3_train], y_train, batch_size),
                                       len(X_1_train),
                                       n_epochs,
