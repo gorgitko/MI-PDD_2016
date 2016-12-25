@@ -83,31 +83,39 @@ def split_smiles(smiles, min_len=5, join_char=""):
         return [smiles_original, "", ""]
 
 
+def get_splits(X, longest_smiles, min_len=5):
+    X_splits = []
+    for smiles in X:
+        smiles_split = split_smiles(smiles, min_len=min_len)
+        if all([False for x in map(len, smiles_split) if x > longest_smiles]):
+            X_splits.append([smiles_split[0], smiles_split[1], smiles_split[2]])
+    return X_splits
+
+
 if __name__ == "__main__":
     #root_dir = "/storage/brno2/home/jirinovo/_school/pdd/activity/"
     root_dir = ""
     X_active_file = "{}data/dna_pol_iota-active-117k-smiles.npy".format(root_dir)
     X_inactive_file = "{}data/zinc-inactive-117k-smiles.npy".format(root_dir)
-    X_file = "{}data/data-117k-X-split_part{{}}".format(root_dir)
-    y_file = "{}data/data-117k-y".format(root_dir)
+    X_file = "{}data/data-1k-X-50_smiles-split_part{{}}".format(root_dir)
+    y_file = "{}data/data-1k-y-50_smiles".format(root_dir)
     smiles_charcodes = np.load("{}data/smiles_charcodes.npy".format(root_dir))
-    longest_smiles = 150
+    longest_smiles = 50
+    min_len = 5  # minimal length of bracket content
+    n_samples = 1000
 
     X_active = np.load(X_active_file)
     X_inactive = np.load(X_inactive_file)
 
+    if n_samples:
+        X_active = np.random.choice(X_active, size=n_samples)
+        X_inactive = np.random.choice(X_inactive, size=n_samples)
+
     print("n X_active:", len(X_active))
     print("n X_inactive:", len(X_inactive))
 
-    X_splits_active = []
-    for smiles in X_active:
-        smiles_split = split_smiles(smiles)
-        X_splits_active.append([smiles_split[0], smiles_split[1], smiles_split[2]])
-
-    X_splits_inactive = []
-    for smiles in X_inactive:
-        smiles_split = split_smiles(smiles)
-        X_splits_inactive.append([smiles_split[0], smiles_split[1], smiles_split[2]])
+    X_splits_active = get_splits(X_active, longest_smiles, min_len=min_len)
+    X_splits_inactive = get_splits(X_inactive, longest_smiles, min_len=min_len)
 
     for i in range(3):
         print("\nencoding split:", i)
@@ -115,5 +123,5 @@ if __name__ == "__main__":
         X_split = encode_smiles(pd.Series(X_split), smiles_charcodes, longest_smiles=longest_smiles)
         np.save(X_file.format(i), X_split)
 
-    y = create_y(len(X_active), len(X_inactive))
+    y = create_y(len(X_splits_active), len(X_splits_inactive))
     np.save(y_file, y)
