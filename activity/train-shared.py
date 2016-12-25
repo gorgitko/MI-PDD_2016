@@ -48,20 +48,18 @@ def build_model_shared_a(input_shape, n_hidden, consume_less="cpu"):
     input_3 = Input(shape=input_shape)
 
     shared_gru_1 = GRU(n_hidden, return_sequences=True, consume_less=consume_less)
+
     gru_1_a = shared_gru_1(input_1)
     gru_1_b = shared_gru_1(input_2)
     gru_1_c = shared_gru_1(input_3)
 
-    shared_gru_2 = GRU(n_hidden, consume_less=consume_less)
-    gru_2_a = shared_gru_2(gru_1_a)
-    gru_2_b = shared_gru_2(gru_1_b)
-    gru_2_c = shared_gru_2(gru_1_c)
-
-    merged_vector = merge([gru_2_a, gru_2_b, gru_2_c], mode="sum")
-    predictions = Dense(1, activation="sigmoid")(merged_vector)
+    merged_vector = merge([gru_1_a, gru_1_b, gru_1_c], mode="sum")
+    gru_2 = GRU(n_hidden, consume_less=consume_less)(merged_vector)
+    predictions = Dense(1, activation="sigmoid")(gru_2)
 
     model = Model(input=[input_1, input_2, input_3], output=predictions)
     model.compile(loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"])
+    return model
 
 
 def build_model_shared_b(input_shape, n_hidden, consume_less="cpu"):
@@ -86,17 +84,21 @@ def build_model_shared_b(input_shape, n_hidden, consume_less="cpu"):
     input_3 = Input(shape=input_shape)
 
     shared_gru_1 = GRU(n_hidden, return_sequences=True, consume_less=consume_less)
-
     gru_1_a = shared_gru_1(input_1)
     gru_1_b = shared_gru_1(input_2)
     gru_1_c = shared_gru_1(input_3)
 
-    merged_vector = merge([gru_1_a, gru_1_b, gru_1_c], mode="sum")
-    gru_2 = GRU(n_hidden, consume_less=consume_less)(merged_vector)
-    predictions = Dense(1, activation="sigmoid")(gru_2)
+    shared_gru_2 = GRU(n_hidden, consume_less=consume_less)
+    gru_2_a = shared_gru_2(gru_1_a)
+    gru_2_b = shared_gru_2(gru_1_b)
+    gru_2_c = shared_gru_2(gru_1_c)
+
+    merged_vector = merge([gru_2_a, gru_2_b, gru_2_c], mode="sum")
+    predictions = Dense(1, activation="sigmoid")(merged_vector)
 
     model = Model(input=[input_1, input_2, input_3], output=predictions)
     model.compile(loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"])
+
     return model
 
 
