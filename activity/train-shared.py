@@ -147,7 +147,7 @@ if __name__ == "__main__":
         early_stopping = EarlyStopping(monitor="val_loss", patience=3, verbose=5, mode="auto")
         model_checkpoint = ModelCheckpoint("{}results/{}-{}_hidden-best_weights_{{epoch:02d}}_{{val_loss:.5f}}.hdf5".format(root_dir, model_name, n_hidden),
                                            monitor="val_loss", verbose=5, save_best_only=True, mode="auto")
-        model = build_model_shared_a(input_shape, n_hidden)
+        model = build_model_shared_a(input_shape, n_hidden, consume_less=consume_less)
         history = model.fit_generator(batch_generator_multi([X_1_train, X_2_train, X_3_train], y_train, batch_size),
                                       len(X_1_train),
                                       n_epochs,
